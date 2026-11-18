@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архив — Sezan Industries</title>
+<style>
+  body { background: #050a0e; color: #e0f7fa; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 80px; }
+  .top { background: #0a141c; border-bottom: 2px solid #00e5ff; padding: 12px 16px; display: flex; justify-content: space-between; }
+  .wrap { max-width: 850px; margin: 16px auto; padding: 0 16px; }
+  .card { background: #0a141c; border: 1px solid #006064; border-radius: 8px; padding: 18px; }
+  h2 { color: #00e5ff; margin-top: 0; }
+  .emp { border-bottom: 1px solid #006064; padding: 10px 0; font-size: 14px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #03070a; border-top: 1px solid #00e5ff; display: flex; justify-content: space-around; padding: 8px 4px; font-family: sans-serif; z-index: 10; }
+  .nav a { color: #4dd0e1; text-decoration: none; font-size: 11px; text-align: center; min-width: 55px; }
+  .nav a.act { color: #fff; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#00e5ff">📁 SEZAN // PERSONNEL</b>
+  <a href="constitution.html" style="color:#d4af37;font-size:12px;text-decoration:none">← Выход</a>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h2>Действующий научный состав Sezan Industries</h2>
+    <div id="staff"></div>
+  </div>
+</div>
+<div class="nav">
+  <a href="sezan_index.html">🧬<br>Проекты</a>
+  <a href="sezan_it.html">💻<br>ИТ-отдел</a>
+  <a href="sezan_chem.html">🧪<br>Хим-Физ</a>
+  <a href="sezan_archive.html" class="act">📁<br>Архив</a>
+  <a href="sezan_chat.html">💬<br>Связь</a>
+</div>
+<script>
+  var db = JSON.parse(localStorage.getItem('ko_v5_db')) || { users: [] };
+  var staff = db.users.filter(function(u) { return u.isSezan; });
+  document.getElementById('staff').innerHTML = staff.map(function(s) {
+    return '<div class="emp"><b>' + s.fullName + '</b> (' + s.cls + ') — <span style="color:#00e5ff">' + (s.sezanRole || 'Сотрудник') + '</span></div>';
+  }).join('') || '<p>Сотрудники ещё не назначены.</p>';
+</script>
+<script src="theme.js"></script>
+</body>
+</html>

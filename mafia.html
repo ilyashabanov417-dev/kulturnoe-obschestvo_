@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мафия — Культурное общество</title>
+<style>
+  body { background: #14090b; color: #f5e6e8; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+  .top { background: #241014; border-bottom: 1px solid #591c27; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .wrap { max-width: 850px; margin: 16px auto; padding: 0 16px; }
+  .card { background: #241014; border: 1px solid #591c27; border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  h2, h3 { color: #ff4d6d; margin-top: 0; }
+  button { background: #c9184a; color: #fff; font-weight: bold; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; margin: 2px; }
+  .p-row { display: flex; justify-content: space-between; align-items: center; background: #14090b; border: 1px solid #591c27; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
+  .feed { height: 220px; overflow-y: auto; background: #14090b; border: 1px solid #591c27; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
+  input { flex: 1; padding: 10px; background: #14090b; border: 1px solid #591c27; color: #fff; border-radius: 8px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0d0507; border-top: 1px solid #591c27; display: flex; justify-content: space-around; padding: 8px 4px; overflow-x: auto; z-index: 10; }
+  .nav a { color: #a87b82; text-decoration: none; font-size: 11px; text-align: center; min-width: 50px; }
+  .nav a.act { color: #ff4d6d; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#ff4d6d">🎭 Клуб «Мафия»</b>
+  <span style="color:#d4af37;font-size:13px">🪙 <b id="coins">0</b></span>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Игровой стол</h2>
+    <p style="font-size:13px;color:#d6a2ab">Ваш активный скин из магазина: <b style="color:#ffd166" id="my-skin"></b></p>
+    <div style="margin-bottom:14px">
+      <button type="button" style="background:#2a9d8f" onclick="join()">+ Сесть за стол</button>
+      <button type="button" onclick="deal()">🃏 Раздать роли</button>
+      <button type="button" style="background:#4a4e69" onclick="phase()">☀️/🌙 Сменить фазу</button>
+      <button type="button" style="background:#591c27" onclick="reset()">Сброс</button>
+    </div>
+
+    <div style="background:#14090b;padding:12px;border-radius:8px;border:1px solid #ff4d6d;margin-bottom:14px">
+      <div>Ваша роль: <b id="my-role" style="color:#80ed99;font-size:16px">Не в игре</b></div>
+      <div style="margin-top:4px">Время суток: <b id="ph-txt" style="color:#ffd166">Ожидание</b></div>
+    </div>
+
+    <h3>Игроки за столом</h3>
+    <div id="plist"></div>
+
+    <h3>Игровой чат</h3>
+    <div id="mfeed" class="feed"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="minp" placeholder="Слово за столом..." onkeydown="if(event.key==='Enter')sendM()">
+      <button type="button" onclick="sendM()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="constitution.html">📜<br>Законы</a>
+  <a href="booking.html">📅<br>Приём</a>
+  <a href="messenger.html">💬<br>Чат</a>
+  <a href="library.html">📚<br>Книги</a>
+  <a href="shop.html">🛒<br>Магазин</a>
+  <a href="mafia.html" class="act">🎭<br>Мафия</a>
+  <a href="sezan_index.html" style="color:#00e5ff">🧬<br>Sezan</a>
+  <a href="profile.html">👤<br>Профиль</a>
+  <a href="admin.html" style="color:#d4af37">👑<br>Админ</a>
+</div>
+
+<script>
+  var cur = JSON.parse(localStorage.getItem('ko_v5_cur'));
+  if (!cur) window.location.href = 'index.html';
+  var db = JSON.parse(localStorage.getItem('ko_v5_db')) || { users: [], mafia: { players: [], phase: 'Ожидание', started: false, log: [] } };
+  var me = db.users.find(function(u) { return u.id === cur.id; }) || cur;
+  document.getElementById('coins').textContent = me.coins || 0;
+  document.getElementById('my-skin').textContent = me.activeSkin || '👤 Стандартный';
+
+  function save() { localStorage.setItem('ko_v5_db', JSON.stringify(db)); }
+
+  function join() {
+    if (db.mafia.started) return alert('Игра уже идёт!');
+    if (db.mafia.players.some(function(p) { return p.id === me.id; })) return;
+    db.mafia.players.push({ id: me.id, name: me.fullName, skin: me.activeSkin || '👤 Стандартный', role: 'Ожидание', alive: true });
+    db.mafia.log.push('Ведущий: ' + me.fullName + ' [' + (me.activeSkin || '👤 Стандартный') + '] сел за стол.');
+    save(); render();
+  }
+
+  function deal() {
+    var pl = db.mafia.players;
+    if (pl.length < 3) return alert('Нужно минимум 3 игрока!');
+    var idx = pl.map(function(_, i) { return i; }).sort(function() { return Math.random() - 0.5; });
+    idx.forEach(function(pIdx, pos) {
+      pl[pIdx].alive = true;
+      pl[pIdx].role = pos === 0 ? '🔪 МАФИЯ' : (pos === 1 ? '🕵️ КОМИССАР' : (pos === 2 && pl.length >= 4 ? '💊 ДОКТОР' : '🧑 МИРНЫЙ'));
+    });
+    db.mafia.started = true;
+    db.mafia.phase = '🌙 НОЧЬ';
+    db.mafia.log.push('Ведущий: Роли розданы! Наступила НОЧЬ.');
+    save(); render();
+  }
+
+  function phase() {
+    if (!db.mafia.started) return;
+    db.mafia.phase = (db.mafia.phase === '🌙 НОЧЬ') ? '☀️ ДЕНЬ' : '🌙 НОЧЬ';
+    db.mafia.log.push('Ведущий: Фаза изменена на ' + db.mafia.phase);
+    save(); render();
+  }
+
+  function kick(i) {
+    db.mafia.players[i].alive = false;
+    db.mafia.log.push('Ведущий: ' + db.mafia.players[i].name + ' выбыл (' + db.mafia.players[i].role + ').');
+    save(); render();
+  }
+
+  function reset() {
+    db.mafia = { players: [], phase: 'Ожидание', started: false, log: [] };
+    save(); render();
+  }
+
+  function sendM() {
+    var inp = document.getElementById('minp');
+    if (!inp.value.trim()) return;
+    db.mafia.log.push(me.fullName + ': ' + inp.value.trim());
+    inp.value = ''; save(); render();
+  }
+
+  function render() {
+    document.getElementById('ph-txt').textContent = db.mafia.phase;
+    var myP = db.mafia.players.find(function(p) { return p.id === me.id; });
+    document.getElementById('my-role').textContent = myP ? myP.role : 'Не за столом';
+
+    document.getElementById('plist').innerHTML = db.mafia.players.map(function(p, i) {
+      var btn = (db.mafia.started && p.alive) ? '<button type="button" onclick="kick(' + i + ')">Выбыл</button>' : '';
+      return '<div class="p-row" style="' + (p.alive ? '' : 'opacity:0.4') + '"><div><b style="color:#ffd166">' + p.skin + '</b> <b>' + p.name + '</b></div>' + btn + '</div>';
+    }).join('') || '<p style="font-size:13px;color:#a87b82">Стол пуст</p>';
+
+    var mf = document.getElementById('mfeed');
+    mf.innerHTML = db.mafia.log.map(function(l) { return '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
+    mf.scrollTop = mf.scrollHeight;
+  }
+  render();
+</script>
+<script src="theme.js"></script>
+</body>
+</html>

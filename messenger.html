@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мессенджер и Звонки — Культурное общество</title>
+<style>
+  body { background: #0e1621; color: #f5f5f5; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+  .top { background: #17212b; border-bottom: 1px solid #0e1621; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .wrap { max-width: 820px; margin: 14px auto; padding: 0 14px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 10px; background: #17212b; border: none; color: #6c7883; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .tab.active { background: #2b5278; color: #fff; }
+  .card { background: #17212b; border-radius: 12px; padding: 14px; }
+  .feed { height: 340px; overflow-y: auto; background: #0e1621; border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { background: #182533; padding: 10px 12px; border-radius: 12px; max-width: 85%; align-self: flex-start; font-size: 14px; }
+  .msg.me { background: #2b5278; align-self: flex-end; }
+  .react-bar { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .r-btn { background: rgba(255,255,255,0.08); border: none; color: #fff; padding: 2px 7px; border-radius: 12px; font-size: 12px; cursor: pointer; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; padding: 11px; background: #242f3d; border: none; color: #fff; border-radius: 8px; }
+  button.send { background: #5288c1; color: #fff; font-weight: bold; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+  video { width: 100%; height: 220px; background: #000; border-radius: 10px; object-fit: cover; transform: scaleX(-1); margin-bottom: 10px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #17212b; border-top: 1px solid #0e1621; display: flex; justify-content: space-around; padding: 8px 4px; overflow-x: auto; z-index: 10; }
+  .nav a { color: #6c7883; text-decoration: none; font-size: 11px; text-align: center; min-width: 50px; }
+  .nav a.act { color: #5288c1; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#5288c1">💬 Мессенджер и Связь</b>
+  <span style="color:#d4af37;font-size:13px">🪙 <b id="coins">0</b></span>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button type="button" id="t-chat" class="tab active" onclick="sw('chat')">💬 Общий чат</button>
+    <button type="button" id="t-chan" class="tab" onclick="sw('chan')">📢 Канал</button>
+    <button type="button" id="t-call" class="tab" onclick="sw('call')">📞 Звонки</button>
+  </div>
+
+  <div id="v-chat" class="card">
+    <div id="feed" class="feed"></div>
+    <div class="row">
+      <input type="text" id="inp" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter')send()">
+      <button type="button" class="send" onclick="send()">➤</button>
+    </div>
+  </div>
+
+  <div id="v-chan" class="card" style="display:none">
+    <div id="chan" class="feed" style="margin-bottom:0"></div>
+  </div>
+
+  <div id="v-call" class="card" style="display:none;text-align:center">
+    <h3 style="margin-top:0;color:#5288c1">Комната видео и аудио звонков</h3>
+    <video id="vid" autoplay muted playsinline></video>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button type="button" class="send" style="background:#2ea043" onclick="startCall(true)">📹 Видеозвонок</button>
+      <button type="button" class="send" onclick="startCall(false)">🎤 Аудиозвонок</button>
+      <button type="button" class="send" style="background:#da3633" onclick="stopCall()">📵 Сбросить</button>
+    </div>
+    <p id="call-st" style="color:#6c7883;font-size:13px;margin-top:10px">Звонок не активен</p>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="constitution.html">📜<br>Законы</a>
+  <a href="booking.html">📅<br>Приём</a>
+  <a href="messenger.html" class="act">💬<br>Чат</a>
+  <a href="library.html">📚<br>Книги</a>
+  <a href="shop.html">🛒<br>Магазин</a>
+  <a href="mafia.html">🎭<br>Мафия</a>
+  <a href="sezan_index.html" style="color:#00e5ff">🧬<br>Sezan</a>
+  <a href="profile.html">👤<br>Профиль</a>
+  <a href="admin.html" style="color:#d4af37">👑<br>Админ</a>
+</div>
+
+<script>
+  var cur = JSON.parse(localStorage.getItem('ko_v5_cur'));
+  if (!cur) window.location.href = 'index.html';
+  var db = JSON.parse(localStorage.getItem('ko_v5_db')) || { users: [], chat: [], channel: [] };
+  var me = db.users.find(function(u) { return u.id === cur.id; }) || cur;
+  document.getElementById('coins').textContent = me.coins || 0;
+
+  function sw(m) {
+    ['chat', 'chan', 'call'].forEach(function(k) {
+      document.getElementById('v-' + k).style.display = (k === m) ? 'block' : 'none';
+      document.getElementById('t-' + k).className = (k === m) ? 'tab active' : 'tab';
+    });
+  }
+
+  function render() {
+    var f = document.getElementById('feed');
+    f.innerHTML = db.chat.map(function(m, idx) {
+      var r = m.reacts || { '👍': 0, '❤️': 0, '🔥': 0, '😂': 0 };
+      return '<div class="msg ' + (m.uid === me.id ? 'me' : '') + '">' +
+             '<small style="color:#64b5f6;font-weight:bold">' + m.author + ' • ' + m.time + '</small><br>' + m.text +
+             '<div class="react-bar">' +
+               '<button class="r-btn" onclick="react(' + idx + ',\'👍\')">👍 ' + r['👍'] + '</button>' +
+               '<button class="r-btn" onclick="react(' + idx + ',\'❤️\')">❤️ ' + r['❤️'] + '</button>' +
+               '<button class="r-btn" onclick="react(' + idx + ',\'🔥\')">🔥 ' + r['🔥'] + '</button>' +
+               '<button class="r-btn" onclick="react(' + idx + ',\'😂\')">😂 ' + r['😂'] + '</button>' +
+             '</div></div>';
+    }).join('') || '<p style="color:#6c7883;font-size:13px">Сообщений пока нет.</p>';
+    f.scrollTop = f.scrollHeight;
+
+    document.getElementById('chan').innerHTML = db.channel.slice().reverse().map(function(c) {
+      return '<div class="msg" style="max-width:100%"><small style="color:#d4af37;font-weight:bold">👑 Администрация • ' + c.d + '</small><br>' + c.t + '</div>';
+    }).join('');
+  }
+
+  function send() {
+    var inp = document.getElementById('inp');
+    var t = inp.value.trim();
+    if (!t) return;
+    var badges = [];
+    if (me.isAdmin) badges.push('Админ');
+    if (me.isSezan) badges.push(me.sezanRole);
+    if (me.isLib) badges.push('Библиотекарь');
+    var tag = badges.length ? ' [' + badges.join(', ') + ']' : '';
+
+    db.chat.push({
+      uid: me.id, author: me.fullName + tag, text: t,
+      time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+      reacts: { '👍': 0, '❤️': 0, '🔥': 0, '😂': 0 }
+    });
+    localStorage.setItem('ko_v5_db', JSON.stringify(db));
+    inp.value = ''; render();
+  }
+
+  function react(idx, emoji) {
+    if (!db.chat[idx].reacts) db.chat[idx].reacts = { '👍': 0, '❤️': 0, '🔥': 0, '😂': 0 };
+    db.chat[idx].reacts[emoji]++;
+    localStorage.setItem('ko_v5_db', JSON.stringify(db));
+    render();
+  }
+
+  var stream = null;
+  async function startCall(video) {
+    stopCall();
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: video, audio: true });
+      document.getElementById('vid').srcObject = stream;
+      document.getElementById('call-st').textContent = video ? '🟢 Идёт видеозвонок' : '🟢 Идёт аудиозвонок';
+    } catch (e) {
+      document.getElementById('call-st').textContent = '🟡 Подключено (камера/микрофон заблокированы браузером)';
+    }
+  }
+  function stopCall() {
+    if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+    document.getElementById('vid').srcObject = null;
+    document.getElementById('call-st').textContent = 'Звонок завершён';
+  }
+  render();
+</script>
+<script src="theme.js"></script>
+</body>
+</html>

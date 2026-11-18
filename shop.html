@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Магазин и Стили — Культурное общество</title>
+<style>
+  body { background: #130f26; color: #f3f0ff; font-family: sans-serif; margin: 0; padding-bottom: 85px; }
+  .top { background: #1d173b; border-bottom: 1px solid #3c2f7a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+  .wrap { max-width: 850px; margin: 16px auto; padding: 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .item { background: #1d173b; border: 1px solid #3c2f7a; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
+  h2 { color: #ffd166; margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+  button { background: linear-gradient(135deg, #ffd166, #f4a261); color: #130f26; font-weight: bold; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 12px; font-size: 13px; }
+  button.owned { background: #2a9d8f; color: #fff; }
+  button.active-btn { background: #4caf50; color: #fff; cursor: default; }
+  .preview-bar { height: 24px; border-radius: 6px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0d0a1a; border-top: 1px solid #3c2f7a; display: flex; justify-content: space-around; padding: 8px 4px; overflow-x: auto; z-index: 10; }
+  .nav a { color: #9d94cc; text-decoration: none; font-size: 11px; text-align: center; min-width: 50px; }
+  .nav a.act { color: #ffd166; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#ffd166">🛒 Магазин и Стили</b>
+  <span style="background:rgba(255,209,102,0.15);border:1px solid #ffd166;color:#ffd166;padding:4px 10px;border-radius:16px;font-size:13px">🪙 <b id="coins">0</b> Культур</span>
+</div>
+
+<div class="wrap">
+  <h2>🎨 Темы оформления приложения</h2>
+  <p style="font-size:13px;margin-bottom:14px">Выберите бесплатный стиль или разблокируйте элитное оформление за монеты <b>Культуры</b>.</p>
+  <div id="themes-grid" class="grid"></div>
+
+  <h2>🎭 Скины для игры «Мафия»</h2>
+  <div id="shop-grid" class="grid"></div>
+</div>
+
+<div class="nav">
+  <a href="constitution.html">📜<br>Законы</a>
+  <a href="booking.html">📅<br>Приём</a>
+  <a href="messenger.html">💬<br>Чат</a>
+  <a href="library.html">📚<br>Книги</a>
+  <a href="shop.html" class="act">🛒<br>Магазин</a>
+  <a href="mafia.html">🎭<br>Мафия</a>
+  <a href="sezan_index.html" style="color:#00e5ff">🧬<br>Sezan</a>
+  <a href="profile.html">👤<br>Профиль</a>
+  <a href="admin.html" style="color:#d4af37">👑<br>Админ</a>
+</div>
+
+<script>
+  var dbKey = localStorage.getItem('ko_v5_db') ? 'ko_v5_db' : (localStorage.getItem('ko_v4_db') ? 'ko_v4_db' : 'ko_v5_db');
+  var curKey = localStorage.getItem('ko_v5_cur') ? 'ko_v5_cur' : (localStorage.getItem('ko_v4_cur') ? 'ko_v4_cur' : 'ko_v5_cur');
+
+  var cur = JSON.parse(localStorage.getItem(curKey));
+  if (!cur) window.location.href = 'index.html';
+  var db = JSON.parse(localStorage.getItem(dbKey)) || { users: [], shop: [] };
+  if (!db.shop || !db.shop.length) {
+    db.shop = [
+      { id: 's1', name: '🎩 Цилиндр Джентльмена', price: 30, desc: 'Классический образ для Мафии' },
+      { id: 's2', name: '🕶️ Тёмный Синдикат', price: 60, desc: 'Элитный стиль мафиози' },
+      { id: 's3', name: '🧬 Кибер-визор Sezan', price: 100, desc: 'Секретный скин лаборатории' },
+      { id: 's4', name: '👑 Золотая Корона Главы', price: 200, desc: 'Легендарный статус за столом' }
+    ];
+  }
+
+  var meIdx = db.users.findIndex(function(u) { return u.id === cur.id || u.login === cur.login; });
+  var me = meIdx !== -1 ? db.users[meIdx] : cur;
+
+  if (!Array.isArray(me.ownedThemes)) me.ownedThemes = ['default', 'classic', 'cyber', 'light'];
+  if (!me.activeTheme) me.activeTheme = 'default';
+
+  var themeCatalog = [
+    { key: 'default', name: '🌲 Изумрудный Стандарт', price: 0, desc: 'Базовый тёмно-зелёный стиль общества.', bg: '#0b1110', ac: '#d4af37' },
+    { key: 'classic', name: '📜 Классический Пергамент', price: 0, desc: 'Античный стиль с книжным шрифтом.', bg: '#14110c', ac: '#e6c253' },
+    { key: 'cyber', name: '🧬 Кибер-терминал Sezan', price: 0, desc: 'Неоновый стиль научной лаборатории.', bg: '#050a0e', ac: '#00e5ff' },
+    { key: 'light', name: '☀️ Дневной Светлый', price: 0, desc: 'Чистый светлый интерфейс для дневной учёбы.', bg: '#f0f2f5', ac: '#1877f2' },
+    { key: 'ruby_1000', name: '♦️ Императорский Рубин', price: 1000, desc: 'Элитный багрово-золотой стиль для почётных членов общества.', bg: '#290910', ac: '#ff2a55' },
+    { key: 'platinum_10000', name: '💎 Абсолютная Платина', price: 10000, desc: 'Легендарный светящийся дизайн высшей лиги. Максимальный престиж.', bg: '#141418', ac: '#e5e4e2' }
+  ];
+
+  function saveMe() {
+    if (meIdx !== -1) db.users[meIdx] = me;
+    localStorage.setItem('ko_v5_db', JSON.stringify(db));
+    localStorage.setItem('ko_v5_cur', JSON.stringify(me));
+    if (localStorage.getItem('ko_v4_db')) {
+      localStorage.setItem('ko_v4_db', JSON.stringify(db));
+      localStorage.setItem('ko_v4_cur', JSON.stringify(me));
+    }
+  }
+
+  function render() {
+    document.getElementById('coins').textContent = me.coins || 0;
+
+    document.getElementById('themes-grid').innerHTML = themeCatalog.map(function(th) {
+      var owned = me.ownedThemes.indexOf(th.key) !== -1;
+      var isAct = me.activeTheme === th.key;
+      var btn = isAct ? '<button type="button" class="active-btn">✔ Применён сейчас</button>' :
+               (owned ? '<button type="button" class="owned" onclick="applyTheme(\'' + th.key + '\')">Выбрать стиль</button>' :
+                        '<button type="button" onclick="buyTheme(\'' + th.key + '\',' + th.price + ')">Купить стиль за 🪙 ' + th.price + '</button>');
+
+      return '<div class="item"><div><div style="font-size:16px;font-weight:bold">' + th.name + '</div>' +
+             '<div class="preview-bar" style="background:' + th.bg + ';color:' + th.ac + '">Пример цвета</div>' +
+             '<p style="font-size:12px;margin:0">' + th.desc + '</p></div>' + btn + '</div>';
+    }).join('');
+
+    document.getElementById('shop-grid').innerHTML = db.shop.map(function(s, idx) {
+      var has = (me.skins || []).indexOf(s.name) !== -1;
+      var btn = has ? '<button type="button" class="owned" onclick="equip(\'' + s.name + '\')">' + (me.activeSkin === s.name ? '✔ Надет в Мафии' : 'Надеть скин') + '</button>' :
+                      '<button type="button" onclick="buySkin(' + idx + ')">Купить за 🪙 ' + s.price + '</button>';
+      return '<div class="item"><div><div style="font-size:16px;font-weight:bold">' + s.name + '</div><p style="font-size:12px;margin-top:6px">' + s.desc + '</p></div>' + btn + '</div>';
+    }).join('');
+  }
+
+  function buyTheme(key, price) {
+    if ((me.coins || 0) < price) return alert('Недостаточно монет Культуры! Нужно: ' + price + ' 🪙');
+    me.coins -= price; me.ownedThemes.push(key); me.activeTheme = key;
+    saveMe(); location.reload();
+  }
+
+  function applyTheme(key) {
+    me.activeTheme = key;
+    saveMe(); location.reload();
+  }
+
+  function buySkin(idx) {
+    var item = db.shop[idx];
+    if ((me.coins || 0) < item.price) return alert('Недостаточно монет Культуры!');
+    me.coins -= item.price;
+    if (!me.skins) me.skins = [];
+    me.skins.push(item.name);
+    me.activeSkin = item.name;
+    saveMe(); render();
+  }
+
+  function equip(name) {
+    me.activeSkin = name;
+    saveMe(); render();
+  }
+
+  render();
+</script>
+<script src="theme.js"></script>
+</body>
+</html>

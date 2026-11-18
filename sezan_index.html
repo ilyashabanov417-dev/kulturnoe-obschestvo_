@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sezan Industries — Терминал</title>
+<style>
+  body { background: #050a0e; color: #e0f7fa; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 80px; }
+  .top { background: #0a141c; border-bottom: 2px solid #00e5ff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .wrap { max-width: 850px; margin: 16px auto; padding: 0 16px; }
+  .card { background: #0a141c; border: 1px solid #006064; border-radius: 8px; padding: 18px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(0,229,255,0.1); }
+  h2, h3 { color: #00e5ff; margin-top: 0; }
+  .proj { border-left: 3px solid #00e5ff; background: #070e14; padding: 12px; margin-bottom: 10px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #03070a; border-top: 1px solid #00e5ff; display: flex; justify-content: space-around; padding: 8px 4px; overflow-x: auto; font-family: sans-serif; z-index: 10; }
+  .nav a { color: #4dd0e1; text-decoration: none; font-size: 11px; text-align: center; min-width: 55px; }
+  .nav a.act { color: #fff; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#00e5ff">🧬 SEZAN INDUSTRIES // CORE</b>
+  <a href="constitution.html" style="color:#d4af37;font-size:12px;text-decoration:none">← В Общество</a>
+</div>
+
+<div class="wrap" id="locked" style="display:none">
+  <div class="card" style="text-align:center;border-color:#ff1744">
+    <h2 style="color:#ff1744">[ДОСТУП ЗАБЛОКИРОВАН]</h2>
+    <p>Требуется допуск сотрудника Sezan Industries (Закон 9 и 10).</p>
+    <a href="booking.html" style="color:#00e5ff">Записаться на отбор</a>
+  </div>
+</div>
+
+<div class="wrap" id="unlocked" style="display:none">
+  <div class="card">
+    <h2>🔒 Секретные неизменные проекты Sezan Industries</h2>
+    <p style="font-size:13px;color:#80deea">Базовые директивы подразделения. Редактированию не подлежат.</p>
+    
+    <div class="proj">
+      <b>ПРОЕКТ «АЛЬФА-КОД» (Отдел: ИТ-специалисты)</b><br>
+      <small>Разработка защищённых алгоритмов шифрования данных и внутренних цифровых систем Культурного общества.</small>
+    </div>
+    <div class="proj">
+      <b>ПРОЕКТ «СИНТЕЗ-7» (Отдел: Химики)</b><br>
+      <small>Теоретическое моделирование новых составов, реактивов и изучение свойств материалов в рамках школьной программы.</small>
+    </div>
+    <div class="proj">
+      <b>ПРОЕКТ «ВЕКТОР-М» (Отдел: Физики-механики)</b><br>
+      <small>Проектирование кинематических схем, оптических приборов и автономных механических прототипов.</small>
+    </div>
+    <div class="proj">
+      <b>ПРОЕКТ «ХРОНОС» (Отдел: Лаборанты и Аналитики)</b><br>
+      <small>Систематизация архивов наблюдений, проверка гипотез и контроль соблюдения протоколов безопасности.</small>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="sezan_index.html" class="act">🧬<br>Проекты</a>
+  <a href="sezan_it.html">💻<br>ИТ-отдел</a>
+  <a href="sezan_chem.html">🧪<br>Хим-Физ</a>
+  <a href="sezan_archive.html">📁<br>Архив</a>
+  <a href="sezan_chat.html">💬<br>Связь</a>
+</div>
+
+<script>
+  var cur = JSON.parse(localStorage.getItem('ko_v5_cur'));
+  if (!cur) window.location.href = 'index.html';
+  var db = JSON.parse(localStorage.getItem('ko_v5_db')) || { users: [] };
+  var me = db.users.find(function(u) { return u.id === cur.id; }) || cur;
+  if (me.isSezan || me.isAdmin || sessionStorage.getItem('ko_v5_adm') === '1') {
+    document.getElementById('unlocked').style.display = 'block';
+  } else {
+    document.getElementById('locked').style.display = 'block';
+  }
+</script>
+<script src="theme.js"></script>
+</body>
+</html>

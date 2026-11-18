@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Закрытая связь — Sezan Industries</title>
+<style>
+  body { background: #050a0e; color: #e0f7fa; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 80px; }
+  .top { background: #0a141c; border-bottom: 2px solid #00e5ff; padding: 12px 16px; display: flex; justify-content: space-between; }
+  .wrap { max-width: 850px; margin: 16px auto; padding: 0 16px; }
+  .card { background: #0a141c; border: 1px solid #006064; border-radius: 8px; padding: 18px; }
+  h2 { color: #00e5ff; margin-top: 0; }
+  .feed { height: 320px; overflow-y: auto; background: #03070a; border: 1px solid #006064; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+  .row { display: flex; gap: 8px; }
+  input { flex: 1; padding: 10px; background: #03070a; border: 1px solid #006064; color: #00e5ff; }
+  button { background: #00e5ff; color: #050a0e; font-weight: bold; border: none; padding: 10px 16px; cursor: pointer; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #03070a; border-top: 1px solid #00e5ff; display: flex; justify-content: space-around; padding: 8px 4px; font-family: sans-serif; z-index: 10; }
+  .nav a { color: #4dd0e1; text-decoration: none; font-size: 11px; text-align: center; min-width: 55px; }
+  .nav a.act { color: #fff; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b style="color:#00e5ff">💬 SEZAN // SECURE-CHAT</b>
+  <a href="constitution.html" style="color:#d4af37;font-size:12px;text-decoration:none">← Выход</a>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h2>Защищённый канал сотрудников Sezan Industries</h2>
+    <div id="feed" class="feed"></div>
+    <div class="row">
+      <input type="text" id="inp" placeholder="Передать сообщение..." onkeydown="if(event.key==='Enter')send()">
+      <button type="button" onclick="send()">SEND</button>
+    </div>
+  </div>
+</div>
+<div class="nav">
+  <a href="sezan_index.html">🧬<br>Проекты</a>
+  <a href="sezan_it.html">💻<br>ИТ-отдел</a>
+  <a href="sezan_chem.html">🧪<br>Хим-Физ</a>
+  <a href="sezan_archive.html">📁<br>Архив</a>
+  <a href="sezan_chat.html" class="act">💬<br>Связь</a>
+</div>
+<script>
+  var cur = JSON.parse(localStorage.getItem('ko_v5_cur')) || { fullName: 'Агент', sezanRole: 'Сотрудник' };
+  var db = JSON.parse(localStorage.getItem('ko_v5_db')) || { sezanNotes: [] };
+  if (!db.sezanNotes) db.sezanNotes = [];
+
+  function render() {
+    var f = document.getElementById('feed');
+    f.innerHTML = db.sezanNotes.map(function(m) {
+      return '<div style="margin-bottom:8px"><b style="color:#00e5ff">[' + m.u + ']:</b> ' + m.t + '</div>';
+    }).join('') || 'Канал чист.';
+    f.scrollTop = f.scrollHeight;
+  }
+  function send() {
+    var inp = document.getElementById('inp');
+    if (!inp.value.trim()) return;
+    db.sezanNotes.push({ u: cur.fullName + ' (' + (cur.sezanRole || 'Sezan') + ')', t: inp.value.trim() });
+    localStorage.setItem('ko_v5_db', JSON.stringify(db));
+    inp.value = ''; render();
+  }
+  render();
+</script>
+<script src="theme.js"></script>
+</body>
+</html>
